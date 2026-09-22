@@ -120,12 +120,13 @@
           const data =
             await response.json();
 
-          if (data.success) {
+     if (data.success) {
 
-            apiStatus.textContent =
-              '✅ 預約 API：' +
-              data.message;
-
+  apiStatus.textContent =
+    '✅ 成功取得 ' +
+    data.dates.length +
+    ' 個可預約日期';
+       
           } else {
 
             apiStatus.textContent =
