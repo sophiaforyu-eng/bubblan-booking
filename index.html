@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>泡泡臉八德館｜LIFF 測試</title>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+
+<body>
+
+  <h2>泡泡臉八德館</h2>
+  <p id="status">LIFF 尚未開始</p>
+
+  <script>
+    const LIFF_ID = '2011692806-0zKyK5sF';
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+      const status = document.getElementById('status');
+
+      status.textContent = '診斷 1：JavaScript 已啟動';
+
+      if (typeof liff === 'undefined') {
+        status.textContent = '診斷失敗：LIFF SDK 未載入';
+        return;
+      }
+
+      status.textContent = '診斷 2：LIFF SDK 已載入';
+
+      liff.init({
+        liffId: LIFF_ID
+      })
+      .then(function () {
+
+        const token = liff.getIDToken();
+
+        status.textContent =
+          token
+            ? '診斷成功：LIFF 初始化成功，已取得 ID Token'
+            : '診斷成功：LIFF 初始化成功，但未取得 ID Token';
+
+      })
+      .catch(function (error) {
+
+        status.textContent =
+          '診斷失敗：' +
+          (
+            error && error.message
+              ? error.message
+              : String(error)
+          );
+
+      });
+
+    });
+  </script>
+
+</body>
+</html>
