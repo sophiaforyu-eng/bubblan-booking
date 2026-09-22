@@ -1617,10 +1617,15 @@
       button.textContent =
         '送出預約申請';
 
-      showMessage(
-        '系統目前無法送出預約，請稍後再試。',
-        'error'
-      );
+     showMessage(
+  '送出失敗：' +
+  (
+    error && error.message
+      ? error.message
+      : String(error)
+  ),
+  'error'
+);
     }
   }
 
