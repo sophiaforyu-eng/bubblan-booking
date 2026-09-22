@@ -3,59 +3,154 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>泡泡臉八德館｜LIFF 測試</title>
+
+  <title>泡泡臉八德館｜預約系統測試</title>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, "Noto Sans TC", sans-serif;
+      padding: 30px 20px;
+      line-height: 1.8;
+      background: #faf7fb;
+      color: #333;
+    }
+
+    .card {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 18px;
+      padding: 28px 24px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .status {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #f5eef7;
+    }
+  </style>
 </head>
 
 <body>
 
-  <h2>泡泡臉八德館</h2>
-  <p id="status">LIFF 尚未開始</p>
+  <div class="card">
+
+    <h2>泡泡臉八德館</h2>
+
+    <div id="liffStatus" class="status">
+      LINE LIFF 檢查中...
+    </div>
+
+    <div id="apiStatus" class="status">
+      預約 API 尚未測試
+    </div>
+
+  </div>
 
   <script>
-    const LIFF_ID = '2011692806-0zKyK5sF';
 
-    document.addEventListener('DOMContentLoaded', function () {
+    const LIFF_ID =
+      '2011692806-0zKyK5sF';
 
-      const status = document.getElementById('status');
+    const API_URL =
+      'https://script.google.com/macros/s/AKfycbw4V2qW3OqexcvIcmvnwnPpp_8XRuXlZHnbGzPSN16KLLh0sJEaalendBxETvQVwie-qw/exec';
 
-      status.textContent = '診斷 1：JavaScript 已啟動';
+    document.addEventListener(
+      'DOMContentLoaded',
+      async function () {
 
-      if (typeof liff === 'undefined') {
-        status.textContent = '診斷失敗：LIFF SDK 未載入';
-        return;
+        const liffStatus =
+          document.getElementById('liffStatus');
+
+        const apiStatus =
+          document.getElementById('apiStatus');
+
+        try {
+
+          await liff.init({
+            liffId: LIFF_ID
+          });
+
+          const token =
+            liff.getIDToken();
+
+          if (token) {
+
+            liffStatus.textContent =
+              '✅ LINE LIFF：已取得 ID Token';
+
+          } else {
+
+            liffStatus.textContent =
+              '⚠️ LINE LIFF：初始化成功，但未取得 ID Token';
+
+          }
+
+        } catch (error) {
+
+          liffStatus.textContent =
+            '❌ LINE LIFF 失敗：' +
+            (
+              error &&
+              error.message
+                ? error.message
+                : String(error)
+            );
+
+        }
+
+        try {
+
+          apiStatus.textContent =
+            '預約 API 連線測試中...';
+
+          const response =
+            await fetch(
+              API_URL + '?action=test'
+            );
+
+          const data =
+            await response.json();
+
+          if (data.success) {
+
+            apiStatus.textContent =
+              '✅ 預約 API：' +
+              data.message;
+
+          } else {
+
+            apiStatus.textContent =
+              '❌ 預約 API 回傳失敗';
+
+          }
+
+        } catch (error) {
+
+          apiStatus.textContent =
+            '❌ 預約 API 無法連線：' +
+            (
+              error &&
+              error.message
+                ? error.message
+                : String(error)
+            );
+
+        }
+
       }
+    );
 
-      status.textContent = '診斷 2：LIFF SDK 已載入';
-
-      liff.init({
-        liffId: LIFF_ID
-      })
-      .then(function () {
-
-        const token = liff.getIDToken();
-
-        status.textContent =
-          token
-            ? '診斷成功：LIFF 初始化成功，已取得 ID Token'
-            : '診斷成功：LIFF 初始化成功，但未取得 ID Token';
-
-      })
-      .catch(function (error) {
-
-        status.textContent =
-          '診斷失敗：' +
-          (
-            error && error.message
-              ? error.message
-              : String(error)
-          );
-
-      });
-
-    });
   </script>
 
 </body>
+  
 </html>
