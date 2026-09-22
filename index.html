@@ -1,157 +1,1656 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>泡泡臉八德館｜預約系統測試</title>
-
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <title>泡泡臉八德館｜線上預約</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, "Noto Sans TC", sans-serif;
-      padding: 30px 20px;
-      line-height: 1.8;
-      background: #faf7fb;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   "Noto Sans TC", Arial, sans-serif;
+      background: #faf8fc;
       color: #333;
     }
 
-    .card {
+    .page {
+      width: 100%;
       max-width: 520px;
       margin: 0 auto;
+      padding: 26px 16px 40px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      font-size: 24px;
+      font-weight: 700;
+      color: #654c73;
+      margin-bottom: 7px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #777;
+    }
+
+    .card {
       background: #fff;
-      border-radius: 18px;
-      padding: 28px 24px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+      border-radius: 20px;
+      padding: 22px 18px;
+      box-shadow: 0 4px 20px rgba(90, 65, 105, 0.08);
     }
 
-    h2 {
-      margin-top: 0;
+    .section {
+      margin-bottom: 28px;
     }
 
-    .status {
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #4d4053;
+      margin-bottom: 16px;
+    }
+
+    .step {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #8e6c9c;
+      color: #fff;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    /* 月曆 */
+
+    .calendar {
+      border: 1px solid #eee7f1;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .calendar-header {
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      background: #fbf8fc;
+      border-bottom: 1px solid #eee7f1;
+    }
+
+    .month-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #5d4966;
+    }
+
+    .month-btn {
+      width: 38px;
+      height: 38px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: #8e6c9c;
+      font-size: 26px;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    .month-btn:hover {
+      background: #f3edf5;
+    }
+
+    .month-btn:disabled {
+      background: transparent;
+      color: #d5ced8;
+      cursor: default;
+    }
+
+    .weekdays,
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .weekdays {
+      padding: 10px 8px 5px;
+    }
+
+    .weekday {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      padding: 5px 0;
+    }
+
+    .calendar-grid {
+      padding: 3px 8px 12px;
+      row-gap: 5px;
+    }
+
+    .day {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      min-height: 42px;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: #3f3942;
+      font-size: 14px;
+      font-weight: 500;
+      margin: 0;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .day:hover:not(.disabled):not(.selected) {
+      background: #f4eef6;
+    }
+
+    .day.selected {
+      background: #8e6c9c;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .day.today:not(.selected) {
+      border: 1px solid #a98ab5;
+      color: #765b82;
+    }
+
+    .day.disabled {
+      color: #d4ced6;
+      background: transparent;
+      cursor: default;
+    }
+
+    .day.empty {
+      visibility: hidden;
+      cursor: default;
+    }
+
+    .calendar-loading {
+      padding: 28px 10px;
+      text-align: center;
+      color: #8d8490;
+      font-size: 14px;
+    }
+
+    .selected-date {
+      margin-top: 12px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      background: #f8f3fa;
+      color: #654c73;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+
+    /* 時段 */
+
+    .time-placeholder {
+      padding: 22px 10px;
+      border-radius: 12px;
+      background: #faf9fb;
+      color: #999;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .time-slot {
+      min-height: 62px;
+      width: 100%;
+      margin: 0;
+      padding: 9px 8px;
+      border: 1px solid #ded4e3;
+      border-radius: 12px;
+      background: #fff;
+      color: #55455c;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+
+    .time-slot:hover:not(:disabled):not(.selected) {
+      border-color: #aa8bb7;
+      background: #faf6fb;
+    }
+
+    .time-slot.selected {
+      border-color: #8e6c9c;
+      background: #8e6c9c;
+      color: #fff;
+    }
+
+    .time-slot:disabled {
+      background: #f5f3f5;
+      border-color: #eee9ef;
+      color: #b7b0ba;
+      cursor: default;
+    }
+
+    .slot-time {
+      font-size: 16px;
+      font-weight: 700;
+    }
+.more-times-button {
+  width: 100%;
+  margin: 14px 0 0;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: #8e6c9c;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.more-times-button:hover {
+  background: #faf6fb;
+  border-radius: 10px;
+}
+    .slot-remaining {
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.85;
+    }
+
+    /* 客戶資料 */
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #444;
+    }
+
+    .required {
+      color: #a56c9d;
+      margin-left: 3px;
+    }
+
+    input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border: 1px solid #ddd5e2;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 16px;
+      color: #333;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #aa8bb7;
+      box-shadow: 0 0 0 3px rgba(170, 139, 183, 0.12);
+    }
+
+    .notice {
+      margin-top: 4px;
+      padding: 16px;
+      background: #f8f2fa;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #5d4a65;
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #654c73;
+    }
+
+    #submitBtn {
+      width: 100%;
+      height: 52px;
+      margin-top: 22px;
+      border: none;
+      border-radius: 12px;
+      background: #8e6c9c;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #submitBtn:disabled {
+      background: #cfc5d3;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
       margin-top: 18px;
       padding: 14px;
       border-radius: 10px;
-      background: #f5eef7;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .message.success {
+      display: block;
+      background: #f0f7f1;
+      color: #416547;
+    }
+
+    .message.error {
+      display: block;
+      background: #fff1f1;
+      color: #9a4545;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    @media (max-width: 380px) {
+      .page {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .card {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .day {
+        min-height: 38px;
+      }
     }
   </style>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
 </head>
 
 <body>
 
+<div class="page">
+
+  <div class="header">
+    <div class="brand">泡泡臉八德館</div>
+    <div class="subtitle">線上預約</div>
+  </div>
+
   <div class="card">
 
-    <h2>泡泡臉八德館</h2>
+    <!-- 1. 選日期 -->
+    <div class="section">
 
-    <div id="liffStatus" class="status">
-      LINE LIFF 檢查中...
+      <div class="section-title">
+        <span class="step">1</span>
+        選擇預約日期
+      </div>
+
+      <div class="calendar">
+
+        <div class="calendar-header">
+
+          <button
+            id="prevMonth"
+            class="month-btn"
+            type="button"
+            onclick="changeMonth(-1)"
+          >
+            ‹
+          </button>
+
+          <div
+            id="monthTitle"
+            class="month-title"
+          >
+            載入中...
+          </div>
+
+          <button
+            id="nextMonth"
+            class="month-btn"
+            type="button"
+            onclick="changeMonth(1)"
+          >
+            ›
+          </button>
+
+        </div>
+
+        <div class="weekdays">
+          <div class="weekday">日</div>
+          <div class="weekday">一</div>
+          <div class="weekday">二</div>
+          <div class="weekday">三</div>
+          <div class="weekday">四</div>
+          <div class="weekday">五</div>
+          <div class="weekday">六</div>
+        </div>
+
+        <div
+          id="calendarGrid"
+          class="calendar-grid"
+        >
+          <div
+            class="calendar-loading"
+            style="grid-column:1 / -1;"
+          >
+            正在取得可預約日期...
+          </div>
+        </div>
+
+      </div>
+
+      <div
+        id="selectedDateText"
+        class="selected-date"
+      ></div>
+
     </div>
 
-    <div id="apiStatus" class="status">
-      預約 API 尚未測試
+
+    <!-- 2. 選時間 -->
+    <div class="section">
+
+      <div class="section-title">
+        <span class="step">2</span>
+        選擇預約時間
+      </div>
+
+      <div id="timeArea">
+
+        <div class="time-placeholder">
+          請先選擇預約日期
+        </div>
+
+      </div>
+
     </div>
+
+
+    <!-- 3. 客戶資料 -->
+    <div class="section">
+
+      <div class="section-title">
+        <span class="step">3</span>
+        填寫預約資料
+      </div>
+
+      <div class="field">
+
+        <label>
+          姓名<span class="required">*</span>
+        </label>
+
+        <input
+          id="name"
+          type="text"
+          placeholder="請輸入姓名"
+          autocomplete="name"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          手機號碼<span class="required">*</span>
+        </label>
+
+        <input
+          id="phone"
+          type="tel"
+          inputmode="numeric"
+          placeholder="例如：0912345678"
+          maxlength="10"
+          autocomplete="tel"
+        >
+
+      </div>
+
+    </div>
+
+
+    <div class="notice">
+      <strong>預約提醒</strong>
+      送出預約申請不代表預約成功。<br>
+      我們收到申請後，會再與美容師確認時間。<br>
+      待您收到「預約確認完成」通知後，才代表預約正式成立。
+    </div>
+
+
+    <button
+      id="submitBtn"
+      type="button"
+      onclick="submitBooking()"
+    >
+      送出預約申請
+    </button>
+
+
+    <div
+      id="message"
+      class="message"
+    ></div>
 
   </div>
 
-  <script>
 
-    const LIFF_ID =
-      '2011692806-0zKyK5sF';
+  <div class="footer">
+    泡泡臉八德館｜預約制
+  </div>
 
-    const API_URL =
-      'https://script.google.com/macros/s/AKfycbw4V2qW3OqexcvIcmvnwnPpp_8XRuXlZHnbGzPSN16KLLh0sJEaalendBxETvQVwie-qw/exec';
+</div>
 
-    document.addEventListener(
-      'DOMContentLoaded',
-      async function () {
 
-        const liffStatus =
-          document.getElementById('liffStatus');
+<script>
 
-        const apiStatus =
-          document.getElementById('apiStatus');
+  let availableDates = [];
+  let availableDateMap = {};
 
-        try {
+  let currentYear = null;
+  let currentMonth = null;
 
-          await liff.init({
-            liffId: LIFF_ID
+  let minCalendarMonth = null;
+  let maxCalendarMonth = null;
+
+  let selectedDate = '';
+  let selectedTime = '';
+
+  const LIFF_ID = '2011692806-0zKyK5sF';
+  const API_URL = 'https://script.google.com/macros/s/AKfycbw4V2qW3OqexcvIcmvnwnPpp_8XRuXlZHnbGzPSN16KLLh0sJEaalendBxETvQVwie-qw/exec';
+
+  let lineIdToken = '';
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    async function () {
+
+      try {
+
+        if (typeof liff === 'undefined') {
+          throw new Error('LIFF SDK 未載入');
+        }
+
+        await liff.init({
+          liffId: LIFF_ID
+        });
+
+        lineIdToken =
+          liff.getIDToken() || '';
+
+        loadDates();
+
+      } catch (error) {
+
+        console.error(
+          'LIFF 初始化失敗：',
+          error
+        );
+
+        // 即使是在一般瀏覽器開啟，
+        // 仍允許載入日期供測試；
+        // 正式送出預約時則必須有 LINE ID Token。
+        loadDates();
+      }
+    }
+  );
+
+
+
+
+  function normalizeDateItem(item) {
+
+    if (
+      typeof item === 'object' &&
+      item !== null
+    ) {
+
+      const value =
+        item.value ||
+        item.date ||
+        '';
+
+      const label =
+        item.label ||
+        item.display ||
+        value;
+
+      return {
+        value: value,
+        label: label
+      };
+    }
+
+    return {
+      value: item,
+      label: item
+    };
+  }
+
+
+  function parseDateString(dateString) {
+
+    const parts =
+      String(dateString).split('-');
+
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    return new Date(
+      Number(parts[0]),
+      Number(parts[1]) - 1,
+      Number(parts[2])
+    );
+  }
+
+
+  function dateKey(year, month, day) {
+
+    return (
+      year +
+      '-' +
+      String(month + 1).padStart(2, '0') +
+      '-' +
+      String(day).padStart(2, '0')
+    );
+  }
+
+
+  function monthKey(year, month) {
+
+    return year * 12 + month;
+  }
+  async function loadDates() {
+
+    const grid =
+      document.getElementById('calendarGrid');
+
+    try {
+
+      const response =
+        await fetch(
+          API_URL + '?action=availableDates',
+          {
+            method: 'GET',
+            cache: 'no-store'
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          'HTTP ' + response.status
+        );
+      }
+
+      const data =
+        await response.json();
+
+      const dates =
+        data && data.success
+          ? data.dates
+          : [];
+
+      if (
+        !dates ||
+        dates.length === 0
+      ) {
+
+        grid.innerHTML =
+          '<div class="calendar-loading" ' +
+          'style="grid-column:1 / -1;">' +
+          '目前沒有開放可預約日期' +
+          '</div>';
+
+        return;
+      }
+
+      availableDates =
+        dates
+          .map(normalizeDateItem)
+          .filter(function (item) {
+            return !!item.value;
           });
 
-          const token =
-            liff.getIDToken();
+      availableDateMap = {};
 
-          if (token) {
-
-            liffStatus.textContent =
-              '✅ LINE LIFF：已取得 ID Token';
-
-          } else {
-
-            liffStatus.textContent =
-              '⚠️ LINE LIFF：初始化成功，但未取得 ID Token';
-
-          }
-
-        } catch (error) {
-
-          liffStatus.textContent =
-            '❌ LINE LIFF 失敗：' +
-            (
-              error &&
-              error.message
-                ? error.message
-                : String(error)
-            );
-
+      availableDates.forEach(
+        function (item) {
+          availableDateMap[
+            item.value
+          ] = item;
         }
+      );
 
-        try {
+      const firstDate =
+        parseDateString(
+          availableDates[0].value
+        );
 
-          apiStatus.textContent =
-            '預約 API 連線測試中...';
+      const lastDate =
+        parseDateString(
+          availableDates[
+            availableDates.length - 1
+          ].value
+        );
 
-          const response =
-            await fetch(
-             API_URL + '?action=availableDates'
-            );
+      if (!firstDate || !lastDate) {
 
-          const data =
-            await response.json();
+        showMessage(
+          '日期格式異常，請稍後再試。',
+          'error'
+        );
 
-     if (data.success) {
-
-  apiStatus.textContent =
-    '✅ 成功取得 ' +
-    data.dates.length +
-    ' 個可預約日期';
-       
-          } else {
-
-            apiStatus.textContent =
-              '❌ 預約 API 回傳失敗';
-
-          }
-
-        } catch (error) {
-
-          apiStatus.textContent =
-            '❌ 預約 API 無法連線：' +
-            (
-              error &&
-              error.message
-                ? error.message
-                : String(error)
-            );
-
-        }
-
+        return;
       }
-    );
 
-  </script>
+      currentYear =
+        firstDate.getFullYear();
+
+      currentMonth =
+        firstDate.getMonth();
+
+      minCalendarMonth =
+        monthKey(
+          firstDate.getFullYear(),
+          firstDate.getMonth()
+        );
+
+      maxCalendarMonth =
+        monthKey(
+          lastDate.getFullYear(),
+          lastDate.getMonth()
+        );
+
+      renderCalendar();
+
+    } catch (error) {
+
+      console.error(
+        '日期載入失敗：',
+        error
+      );
+
+      grid.innerHTML =
+        '<div class="calendar-loading" ' +
+        'style="grid-column:1 / -1;">' +
+        '日期載入失敗，請稍後再試' +
+        '</div>';
+
+      showMessage(
+        '日期載入失敗，請稍後再試。',
+        'error'
+      );
+    }
+  }
+
+
+
+
+  function renderCalendar() {
+
+    const grid =
+      document.getElementById(
+        'calendarGrid'
+      );
+
+    const title =
+      document.getElementById(
+        'monthTitle'
+      );
+
+    grid.innerHTML = '';
+
+    title.textContent =
+      currentYear +
+      ' 年 ' +
+      (currentMonth + 1) +
+      ' 月';
+
+
+    const firstDay =
+      new Date(
+        currentYear,
+        currentMonth,
+        1
+      ).getDay();
+
+
+    const daysInMonth =
+      new Date(
+        currentYear,
+        currentMonth + 1,
+        0
+      ).getDate();
+
+
+    for (
+      let i = 0;
+      i < firstDay;
+      i++
+    ) {
+
+      const empty =
+        document.createElement(
+          'button'
+        );
+
+      empty.type = 'button';
+      empty.className =
+        'day empty';
+
+      grid.appendChild(empty);
+    }
+
+
+    const today = new Date();
+
+    const todayKey =
+      dateKey(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+
+
+    for (
+      let day = 1;
+      day <= daysInMonth;
+      day++
+    ) {
+
+      const key =
+        dateKey(
+          currentYear,
+          currentMonth,
+          day
+        );
+
+
+      const button =
+        document.createElement(
+          'button'
+        );
+
+      button.type = 'button';
+      button.className = 'day';
+      button.textContent = day;
+
+
+      const isAvailable =
+        !!availableDateMap[key];
+
+
+      if (!isAvailable) {
+
+        button.disabled = true;
+
+        button.classList.add(
+          'disabled'
+        );
+
+      } else {
+
+        button.onclick =
+          function () {
+            selectDate(key);
+          };
+      }
+
+
+      if (key === todayKey) {
+
+        button.classList.add(
+          'today'
+        );
+      }
+
+
+      if (key === selectedDate) {
+
+        button.classList.add(
+          'selected'
+        );
+      }
+
+
+      grid.appendChild(button);
+    }
+
+
+    const currentKey =
+      monthKey(
+        currentYear,
+        currentMonth
+      );
+
+
+    document.getElementById(
+      'prevMonth'
+    ).disabled =
+      currentKey <=
+      minCalendarMonth;
+
+
+    document.getElementById(
+      'nextMonth'
+    ).disabled =
+      currentKey >=
+      maxCalendarMonth;
+  }
+
+
+  function changeMonth(direction) {
+
+    let year =
+      currentYear;
+
+    let month =
+      currentMonth + direction;
+
+
+    if (month < 0) {
+      month = 11;
+      year--;
+    }
+
+
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+
+
+    const targetKey =
+      monthKey(
+        year,
+        month
+      );
+
+
+    if (
+      targetKey <
+        minCalendarMonth ||
+      targetKey >
+        maxCalendarMonth
+    ) {
+      return;
+    }
+
+
+    currentYear = year;
+    currentMonth = month;
+
+    renderCalendar();
+  }
+
+
+  function selectDate(date) {
+
+    selectedDate = date;
+    selectedTime = '';
+
+    renderCalendar();
+
+
+    const selectedText =
+      document.getElementById(
+        'selectedDateText'
+      );
+
+
+    const item =
+      availableDateMap[date];
+
+
+    selectedText.style.display =
+      'block';
+
+    selectedText.textContent =
+      '已選擇：' +
+      (
+        item &&
+        item.label
+          ? item.label
+          : date
+      );
+
+
+    loadTimes(date);
+  }
+
+
+  async function loadTimes(date) {
+
+    const area =
+      document.getElementById(
+        'timeArea'
+      );
+
+    area.innerHTML =
+      '<div class="time-placeholder">' +
+      '正在確認可預約時間...' +
+      '</div>';
+
+    try {
+
+      const response =
+        await fetch(
+          API_URL +
+          '?action=availableTimes&date=' +
+          encodeURIComponent(date),
+          {
+            method: 'GET',
+            cache: 'no-store'
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          'HTTP ' + response.status
+        );
+      }
+
+      const data =
+        await response.json();
+
+      if (
+        !data ||
+        !data.success
+      ) {
+        throw new Error(
+          data && data.message
+            ? data.message
+            : '無法取得預約時間'
+        );
+      }
+
+      const slots =
+        data.slots || [];
+
+        if (
+          !slots ||
+          slots.length === 0
+        ) {
+
+          area.innerHTML =
+            '<div class="time-placeholder">' +
+            '當日目前無可預約時段' +
+            '</div>';
+
+          return;
+        }
+
+
+        // 統一整理後端傳回的時段資料
+        const normalizedSlots =
+          slots
+            .map(function (slot) {
+
+              let time = '';
+              let remaining = null;
+
+              if (
+                typeof slot === 'string'
+              ) {
+
+                time = slot;
+
+              } else {
+
+                time =
+                  slot.time || '';
+
+                if (
+                  slot.remaining !==
+                  undefined
+                ) {
+
+                  remaining =
+                    Number(
+                      slot.remaining
+                    );
+                }
+              }
+
+              return {
+                time: time,
+                remaining: remaining
+              };
+            })
+            .filter(function (slot) {
+
+              if (!slot.time) {
+                return false;
+              }
+
+              // 沒有 remaining 資料時，
+              // 沿用原本邏輯視為可預約
+              if (
+                slot.remaining === null ||
+                Number.isNaN(
+                  slot.remaining
+                )
+              ) {
+                return true;
+              }
+
+              return (
+                slot.remaining > 0
+              );
+            });
+
+
+        if (
+          normalizedSlots.length === 0
+        ) {
+
+          area.innerHTML =
+            '<div class="time-placeholder">' +
+            '當日目前無可預約時段' +
+            '</div>';
+
+          return;
+        }
+
+
+        // 建立單一時間按鈕
+        function createTimeButton(slot) {
+
+          const button =
+            document.createElement(
+              'button'
+            );
+
+          button.type = 'button';
+
+          button.className =
+            'time-slot';
+
+
+          const timeText =
+            document.createElement(
+              'span'
+            );
+
+          timeText.className =
+            'slot-time';
+
+          timeText.textContent =
+            slot.time;
+
+          button.appendChild(
+            timeText
+          );
+
+
+          button.onclick =
+            function () {
+
+              selectTime(
+                slot.time,
+                button
+              );
+            };
+
+
+          return button;
+        }
+
+
+        // 從所有真正可預約時段中，
+        // 平均分散挑出最多 4 個推薦時段
+        function getRecommendedSlots(
+          availableSlots
+        ) {
+
+          if (
+            availableSlots.length <= 4
+          ) {
+            return availableSlots;
+          }
+
+
+          const indexes = [
+            0,
+            Math.round(
+              (availableSlots.length - 1) /
+              3
+            ),
+            Math.round(
+              (availableSlots.length - 1) *
+              2 /
+              3
+            ),
+            availableSlots.length - 1
+          ];
+
+
+          const uniqueIndexes =
+            [];
+
+          indexes.forEach(
+            function (index) {
+
+              if (
+                !uniqueIndexes.includes(
+                  index
+                )
+              ) {
+                uniqueIndexes.push(
+                  index
+                );
+              }
+            }
+          );
+
+
+          // 理論上通常會有 4 個，
+          // 若因時段數量造成重複，
+          // 再從其他可預約時段補足
+          for (
+            let i = 0;
+            i < availableSlots.length &&
+            uniqueIndexes.length < 4;
+            i++
+          ) {
+
+            if (
+              !uniqueIndexes.includes(i)
+            ) {
+              uniqueIndexes.push(i);
+            }
+          }
+
+
+          uniqueIndexes.sort(
+            function (a, b) {
+              return a - b;
+            }
+          );
+
+
+          return uniqueIndexes
+            .slice(0, 4)
+            .map(function (index) {
+              return availableSlots[index];
+            });
+        }
+
+
+        const grid =
+          document.createElement(
+            'div'
+          );
+
+        grid.className =
+          'time-grid';
+
+
+        const recommendedSlots =
+          getRecommendedSlots(
+            normalizedSlots
+          );
+
+
+        // 預設只顯示推薦時段
+        recommendedSlots.forEach(
+          function (slot) {
+
+            grid.appendChild(
+              createTimeButton(slot)
+            );
+          }
+        );
+
+
+        area.innerHTML = '';
+
+        area.appendChild(
+          grid
+        );
+
+
+        // 超過 4 個可預約時段時，
+        // 才顯示「查看更多」
+        if (
+          normalizedSlots.length > 4
+        ) {
+
+          const moreButton =
+            document.createElement(
+              'button'
+            );
+
+          moreButton.type =
+            'button';
+
+          moreButton.textContent =
+            '查看更多可預約時間';
+
+          moreButton.className =
+            'more-times-button';
+
+
+          moreButton.onclick =
+            function () {
+
+              grid.innerHTML = '';
+
+
+              normalizedSlots.forEach(
+                function (slot) {
+
+                  grid.appendChild(
+                    createTimeButton(
+                      slot
+                    )
+                  );
+                }
+              );
+
+
+              moreButton.style.display =
+                'none';
+            };
+
+
+          area.appendChild(
+            moreButton
+          );
+        }
+
+    } catch (error) {
+
+      console.error(
+        '時段載入失敗：',
+        error
+      );
+
+      area.innerHTML =
+        '<div class="time-placeholder">' +
+        '目前無法取得預約時間，請稍後再試' +
+        '</div>';
+
+      showMessage(
+        '目前無法取得預約時間，請稍後再試。',
+        'error'
+      );
+    }
+  }
+
+
+  function selectTime(
+    time,
+    button
+  ) {
+
+    selectedTime = time;
+
+
+    document
+      .querySelectorAll(
+        '.time-slot'
+      )
+      .forEach(
+        function (item) {
+
+          item.classList.remove(
+            'selected'
+          );
+
+        }
+      );
+
+
+    button.classList.add(
+      'selected'
+    );
+  }
+
+
+  async function submitBooking() {
+
+    const name =
+      document
+        .getElementById('name')
+        .value
+        .trim();
+
+    const phone =
+      document
+        .getElementById('phone')
+        .value
+        .trim();
+
+    if (!selectedDate) {
+
+      showMessage(
+        '請選擇預約日期。',
+        'error'
+      );
+
+      return;
+    }
+
+    if (!selectedTime) {
+
+      showMessage(
+        '請選擇預約時間。',
+        'error'
+      );
+
+      return;
+    }
+
+    if (!name) {
+
+      showMessage(
+        '請輸入姓名。',
+        'error'
+      );
+
+      return;
+    }
+
+    if (
+      !/^09\d{8}$/.test(
+        phone
+      )
+    ) {
+
+      showMessage(
+        '請輸入正確的手機號碼，例如 0912345678。',
+        'error'
+      );
+
+      return;
+    }
+
+    if (!lineIdToken) {
+
+      showMessage(
+        '請從泡泡臉八德館的 LINE 官方帳號開啟預約頁面後再送出預約。',
+        'error'
+      );
+
+      return;
+    }
+
+    const button =
+      document.getElementById(
+        'submitBtn'
+      );
+
+    button.disabled = true;
+
+    button.textContent =
+      '預約申請送出中...';
+
+    const data = {
+      lineIdToken: lineIdToken,
+      name: name,
+      phone: phone,
+      date: selectedDate,
+      time: selectedTime
+    };
+
+    try {
+
+      const response =
+        await fetch(
+          API_URL,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type':
+                'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify({
+              action: 'createBooking',
+              data: data
+            })
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          'HTTP ' + response.status
+        );
+      }
+
+      const result =
+        await response.json();
+
+      button.disabled = false;
+
+      button.textContent =
+        '送出預約申請';
+
+      if (
+        !result ||
+        !result.success
+      ) {
+
+        showMessage(
+          result &&
+          result.message
+            ? result.message
+            : '預約申請未完成，請重新確認。',
+          'error'
+        );
+
+        return;
+      }
+
+      showMessage(
+        '已收到您的預約申請！' +
+        '<br><br>' +
+        '預約日期：' +
+        result.date +
+        '<br>' +
+        '預約時間：' +
+        result.time +
+        '<br><br>' +
+        '我們正在幫您與美容師確認時間。' +
+        '<br>' +
+        '待收到「預約確認完成」通知後，才代表預約正式成立。',
+        'success'
+      );
+
+      button.disabled = true;
+
+      button.textContent =
+        '預約申請已送出';
+
+    } catch (error) {
+
+      console.error(
+        '預約送出失敗：',
+        error
+      );
+
+      button.disabled = false;
+
+      button.textContent =
+        '送出預約申請';
+
+      showMessage(
+        '系統目前無法送出預約，請稍後再試。',
+        'error'
+      );
+    }
+  }
+
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    const message =
+      document.getElementById(
+        'message'
+      );
+
+
+    message.className =
+      'message ' + type;
+
+
+    message.innerHTML =
+      text;
+
+
+    message.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest'
+    });
+  }
+
+</script>
 
 </body>
-  
 </html>
